@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuenta David</title>
+  <style>
+    :root {
+      --bg-canvas: #eef2f6;
+      --bg-window: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+    body {
+      background-color: var(--bg-canvas);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .david-window {
+      background: var(--bg-window);
+      width: 100%;
+      max-width: 460px;
+      border-radius: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .window-header {
+      padding: 24px 28px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .window-body {
+      padding: 28px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    h2 { font-size: 20px; color: var(--text-main); margin-bottom: 8px; font-weight: 700; }
+    p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      background: #f8fafc;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; margin-top: 8px; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      margin-top: 10px;
+    }
+    .btn-outline:hover:not(:disabled) { background: #f1f5f9; }
+
+    .btn-danger-link {
+      background: transparent;
+      border: none;
+      color: var(--danger);
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 15px;
+      text-decoration: underline;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn-child { background: #8b5cf6; color: #fff; }
+    .btn-child:hover:not(:disabled) { background: #7c3aed; }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(40%);
+    }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; margin-top: 0; }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-delete:hover {
+      background: #fef2f2;
+      color: var(--danger);
+    }
+
+    .accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .account-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .account-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .account-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar-render {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .acc-name { font-weight: 600; font-size: 14px; color: var(--text-main); }
+    .acc-type { font-size: 12px; color: var(--text-muted); }
+
+    .tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #e2e8f0;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .tag.kid { background: #fce7f3; color: #9d174d; }
+
+    .active-session {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .avatar-uploader-box {
+      border: 1px dashed var(--border-color);
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      margin-bottom: 16px;
+    }
+
+    .alert {
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  </style>
+</head>
+<body>
+
+  <div class="david-window">
+    <div class="window-header">
+      <div class="brand">
+        <svg viewBox="0 0 100 100" class="brand-logo-img">
+          <circle cx="50" cy="50" r="50" fill="#000000" />
+          <circle cx="50" cy="42" r="19" fill="#ffffff" />
+          <ellipse cx="50" cy="95" rx="38" ry="30" fill="#ffffff" />
+        </svg>
+        <div class="brand-title">Cuenta David</div>
+      </div>
+    </div>
+
+    <div class="window-body">
+      <div id="alertBox" class="alert alert-error"></div>
+
+      <!-- VISTA 1: INICIO Y LISTA DE CUENTAS -->
+      <div id="view-main" class="view active">
+        <div id="activeSessionContainer"></div>
+
+        <h2>Cuentas Guardadas</h2>
+        <p class="subtitle">Selecciona una opción para continuar</p>
+
+        <div class="accounts-list" id="accountsList"></div>
+
+        <button class="btn btn-primary" onclick="showView('view-login')">Iniciar sesión</button>
+        <button class="btn btn-outline" onclick="showView('view-type-select')">Crear cuenta David</button>
+        <button class="btn-danger-link" onclick="clearAllData()">Borrar todas las cuentas</button>
+      </div>
+
+      <!-- VISTA MODAL: CAMBIAR FOTO -->
+      <div id="view-change-photo" class="view">
+        <h2>Cambiar Foto de Perfil</h2>
+        <p class="subtitle">Sube una imagen de tu dispositivo o pega un enlace URL</p>
+
+        <div class="avatar-uploader-box">
+          <label>Subir desde el dispositivo</label>
+          <input type="file" id="changePhotoFile" accept="image/*" style="margin-bottom: 12px;">
+
+          <label>O pegar URL de la imagen</label>
+          <input type="url" id="changePhotoUrl" placeholder="https://ejemplo.com/foto.jpg">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveNewProfilePhoto()">Guardar Nueva Foto</button>
+        <button class="btn btn-outline" onclick="showView('view-main')">Cancelar</button>
+      </div>
+
+      <!-- VISTA 2: INICIAR SESIÓN -->
+      <div id="view-login" class="view">
+        <h2>Iniciar Sesión</h2>
+        <p class="subtitle">Ingresa tus credenciales de Cuenta David</p>
+
+        <form id="form-login" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input type="text" id="loginUser" required placeholder="Ej. usuario123">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPass" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-login" disabled>Entrar</button>
+          <button type="button" class="btn btn-outline" onclick="showView('view-main')">Volver</button>
+        </form>
+      </div>
+
+      <!-- VISTA 3: SELECCIÓN DE TIPO DE CUENTA -->
+      <div id="view-type-select" class="view">
+        <h2>Crear una Cuenta</h2>
+        <p class="subtitle">¿Va a ser una cuenta normal o para niños?</p>
+
+        <button class="btn btn-primary" onclick="showView('view-reg-normal')">Para uso normal</button>
+        <button class="btn btn-child" style="margin-top: 12px;" onclick="showView('view-reg-kid')">Para mi niño/a</button>
+        <button class="btn btn-outline" onclick="showView('view-main')">Cancelar</button>
+      </div>
+
+      <!-- VISTA 4A: CUENTA NORMAL -->
+      <div id="view-reg-normal" class="view">
+        <h2>Cuenta Normal</h2>
+        <p class="subtitle">Completa los datos para crear tu cuenta</p>
+
+        <form id="form-reg-normal" onsubmit="handleRegisterNormal(event)">
+          <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input type="text" id="normUser" required>
+          </div>
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="normEmail" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de nacimiento</label>
+              <input type="date" id="normDob" required>
+            </div>
+            <div class="form-group">
+              <label>Edad</label>
+              <input type="number" id="normAge" min="1" max="120" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Género</label>
+            <select id="normGender" required>
+              <option value="">Seleccionar...</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="avatar-uploader-box">
+            <label>Foto de perfil (Opcional)</label>
+            <input type="file" id="normFile" accept="image/*" style="margin-bottom: 8px;">
+            <input type="url" id="normUrl" placeholder="O pega URL de la imagen">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input type="password" id="normPass" required>
+            </div>
+            <div class="form-group">
+              <label>Confirmación</label>
+              <input type="password" id="normPassConf" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-reg-normal" disabled>Registrar Cuenta</button>
+          <button type="button" class="btn btn-outline" onclick="showView('view-type-select')">Volver</button>
+        </form>
+      </div>
+
+      <!-- VISTA 4B: CUENTA PARA NIÑO/A -->
+      <div id="view-reg-kid" class="view">
+        <h2>Cuenta Infantil</h2>
+        <p class="subtitle">Registro supervisado para niño/a</p>
+
+        <form id="form-reg-kid" onsubmit="handleRegisterKid(event)">
+          <div class="form-group">
+            <label>Nombre completo / Apodo</label>
+            <input type="text" id="kidName" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de nacimiento</label>
+              <input type="date" id="kidDob" required>
+            </div>
+            <div class="form-group">
+              <label>Edad</label>
+              <input type="number" id="kidAge" min="1" max="17" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Género</label>
+            <select id="kidGender" required>
+              <option value="">Seleccionar...</option>
+              <option value="Niño">Niño</option>
+              <option value="Niña">Niña</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="avatar-uploader-box">
+            <label>Foto de perfil (Opcional)</label>
+            <input type="file" id="kidFile" accept="image/*" style="margin-bottom: 8px;">
+            <input type="url" id="kidUrl" placeholder="O pega URL de la imagen">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input type="password" id="kidPass" required>
+            </div>
+            <div class="form-group">
+              <label>Confirmación</label>
+              <input type="password" id="kidPassConf" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-child" id="btn-reg-kid" disabled>Crear Cuenta Infantil</button>
+          <button type="button" class="btn btn-outline" onclick="showView('view-type-select')">Volver</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let rawAccounts = JSON.parse(localStorage.getItem('david_accounts')) || [];
+    let accounts = rawAccounts.map(a => ({
+      ...a,
+      username: a.username || a.name || 'Usuario'
+    }));
+
+    let activeUser = localStorage.getItem('david_active_user') || null;
+
+    function saveState() {
+      try {
+        localStorage.setItem('david_accounts', JSON.stringify(accounts));
+        if (activeUser) {
+          localStorage.setItem('david_active_user', activeUser);
+        } else {
+          localStorage.removeItem('david_active_user');
+        }
+        renderMainView();
+      } catch (err) {
+        showAlert('Error de almacenamiento. Intenta usar una imagen más pequeña.');
+      }
+    }
+
+    function deleteAccount(username) {
+      if (confirm(`¿Estás seguro de que deseas eliminar la cuenta "${username}"?`)) {
+        accounts = accounts.filter(a => a.username.toLowerCase() !== username.toLowerCase());
+        
+        if (activeUser && activeUser.toLowerCase() === username.toLowerCase()) {
+          activeUser = null;
+        }
+
+        saveState();
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('¿Quieres borrar absolutamente TODAS las cuentas guardadas?')) {
+        localStorage.removeItem('david_accounts');
+        localStorage.removeItem('david_active_user');
+        accounts = [];
+        activeUser = null;
+        renderMainView();
+      }
+    }
+
+    function showAlert(msg) {
+      const box = document.getElementById('alertBox');
+      box.innerText = msg;
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      document.getElementById('alertBox').style.display = 'none';
+      
+      // Reiniciar formularios al abrir vistas
+      const viewEl = document.getElementById(viewId);
+      const form = viewEl.querySelector('form');
+      if (form) {
+        form.reset();
+        checkFormValidity(form);
+      }
+    }
+
+    function renderAvatarHTML(acc, cssClass = 'avatar-render') {
+      if (acc && acc.avatar) {
+        return `<img src="${acc.avatar}" class="${cssClass}" alt="Foto de perfil">`;
+      }
+      const isKid = acc && acc.type === 'kid';
+      return `
+        <svg viewBox="0 0 100 100" class="${cssClass}">
+          <circle cx="50" cy="50" r="50" fill="${isKid ? '#be185d' : '#000000'}" />
+          <circle cx="50" cy="42" r="19" fill="#ffffff" />
+          <ellipse cx="50" cy="95" rx="38" ry="30" fill="#ffffff" />
+        </svg>
+      `;
+    }
+
+    function renderMainView() {
+      const listContainer = document.getElementById('accountsList');
+      const sessionContainer = document.getElementById('activeSessionContainer');
+      
+      listContainer.innerHTML = '';
+      sessionContainer.innerHTML = '';
+
+      if (activeUser) {
+        const user = accounts.find(a => (a.username || '').toLowerCase() === activeUser.toLowerCase());
+        if (user) {
+          sessionContainer.innerHTML = `
+            <div class="active-session">
+              <p style="font-size:11px; color:#047857; font-weight:700;">SESIÓN ACTIVA</p>
+              ${renderAvatarHTML(user, 'avatar-render')}
+              <h3 style="color:#065f46; margin:2px 0;">${user.username}</h3>
+              <p style="font-size:12px; color:#047857;">${user.type === 'kid' ? 'Cuenta Infantil (' + user.age + ' años)' : user.email}</p>
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <button class="btn btn-outline btn-sm" onclick="showView('view-change-photo')">Cambiar Foto</button>
+                <button class="btn btn-outline btn-sm" onclick="logout()">Cerrar Sesión</button>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      if (accounts.length === 0) {
+        listContainer.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px;">No hay cuentas guardadas aún.</p>`;
+        return;
+      }
+
+      accounts.forEach(acc => {
+        const isKid = acc.type === 'kid';
+        listContainer.innerHTML += `
+          <div class="account-card">
+            <div class="account-info">
+              ${renderAvatarHTML(acc, 'avatar-render')}
+              <div>
+                <div class="acc-name">${acc.username || 'Usuario'}</div>
+                <div class="acc-type">${isKid ? 'Edad: ' + acc.age : acc.email}</div>
+              </div>
+            </div>
+            <div class="account-actions">
+              <span class="tag ${isKid ? 'kid' : ''}">${isKid ? 'Niño/a' : 'Normal'}</span>
+              <button class="btn-delete" title="Eliminar cuenta" onclick="deleteAccount('${acc.username}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Comprobación de validez dinámica para habilitar/deshabilitar botones de envío
+    function checkFormValidity(form) {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = !form.checkValidity();
+      }
+    }
+
+    // Escuchar eventos en los tres formularios
+    ['form-login', 'form-reg-normal', 'form-reg-kid'].forEach(formId => {
+      const form = document.getElementById(formId);
+      if (form) {
+        form.addEventListener('input', () => checkFormValidity(form));
+        form.addEventListener('change', () => checkFormValidity(form));
+      }
+    });
+
+    function processAvatarInput(fileInputId, urlInputId, callback) {
+      const fileInput = document.getElementById(fileInputId);
+      const urlInput = document.getElementById(urlInputId);
+
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxSize = 180;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+            } else {
+              if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = () => callback(null);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => callback(null);
+        reader.readAsDataURL(file);
+      } else if (urlInput && urlInput.value.trim() !== '') {
+        callback(urlInput.value.trim());
+      } else {
+        callback(null);
+      }
+    }
+
+    function saveNewProfilePhoto() {
+      if (!activeUser) return;
+
+      processAvatarInput('changePhotoFile', 'changePhotoUrl', (avatarData) => {
+        if (!avatarData) {
+          showAlert('Selecciona una imagen válida.');
+          return;
+        }
+
+        const userIndex = accounts.findIndex(a => (a.username || '').toLowerCase() === activeUser.toLowerCase());
+        if (userIndex !== -1) {
+          accounts[userIndex].avatar = avatarData;
+          saveState();
+          showView('view-main');
+          document.getElementById('changePhotoFile').value = '';
+          document.getElementById('changePhotoUrl').value = '';
+        }
+      });
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+
+      const found = accounts.find(a => (a.username || '').toLowerCase() === user.toLowerCase() && a.password === pass);
+
+      if (found) {
+        activeUser = found.username;
+        saveState();
+        showView('view-main');
+      } else {
+        showAlert('Usuario o contraseña incorrectos.');
+      }
+    }
+
+    function handleRegisterNormal(e) {
+      e.preventDefault();
+      const user = document.getElementById('normUser').value.trim();
+      const email = document.getElementById('normEmail').value.trim();
+      const dob = document.getElementById('normDob').value;
+      const age = document.getElementById('normAge').value;
+      const gender = document.getElementById('normGender').value;
+      const pass = document.getElementById('normPass').value;
+      const passConf = document.getElementById('normPassConf').value;
+
+      if (pass !== passConf) {
+        showAlert('Las contraseñas no coinciden.');
+        return;
+      }
+
+      if (accounts.some(a => (a.username || '').toLowerCase() === user.toLowerCase())) {
+        showAlert('El nombre de usuario ya está registrado.');
+        return;
+      }
+
+      processAvatarInput('normFile', 'normUrl', (avatarData) => {
+        accounts.push({
+          type: 'normal',
+          username: user,
+          email: email,
+          dob: dob,
+          age: age,
+          gender: gender,
+          password: pass,
+          avatar: avatarData
+        });
+
+        activeUser = user;
+        saveState();
+        showView('view-main');
+      });
+    }
+
+    function handleRegisterKid(e) {
+      e.preventDefault();
+      const name = document.getElementById('kidName').value.trim();
+      const dob = document.getElementById('kidDob').value;
+      const age = document.getElementById('kidAge').value;
+      const gender = document.getElementById('kidGender').value;
+      const pass = document.getElementById('kidPass').value;
+      const passConf = document.getElementById('kidPassConf').value;
+
+      if (pass !== passConf) {
+        showAlert('Las contraseñas no coinciden.');
+        return;
+      }
+
+      if (accounts.some(a => (a.username || '').toLowerCase() === name.toLowerCase())) {
+        showAlert('Ese nombre ya está registrado.');
+        return;
+      }
+
+      processAvatarInput('kidFile', 'kidUrl', (avatarData) => {
+        accounts.push({
+          type: 'kid',
+          username: name,
+          dob: dob,
+          age: age,
+          gender: gender,
+          password: pass,
+          avatar: avatarData
+        });
+
+        activeUser = name;
+        saveState();
+        showView('view-main');
+      });
+    }
+
+    function logout() {
+      activeUser = null;
+      saveState();
+    }
+
+    renderMainView();
+  </script>
+</body>
+</html>
