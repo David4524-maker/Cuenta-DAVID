@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión con Cuenta David</title>
+  <style>
+    :root {
+      --bg-canvas: #090d16;
+      --bg-window: #1e293b;
+      --banner-bg: #38bdf8;
+      --banner-text: #0f172a;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --danger: #f87171;
+      --danger-hover: #ef4444;
+      --success: #34d399;
+      --warning: #fbbf24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+    body {
+      background-color: var(--bg-canvas);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .david-window {
+      background: var(--bg-window);
+      width: 100%;
+      max-width: 440px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .window-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .sso-banner {
+      background: var(--banner-bg);
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: center;
+      color: var(--banner-text);
+      transition: background 0.3s;
+    }
+
+    .sso-banner.unknown {
+      background: #dc2626;
+      color: #ffffff;
+    }
+
+    .app-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .sso-banner h2 {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .sso-banner.unknown h2, .sso-banner.unknown p {
+      color: #ffffff;
+    }
+
+    .sso-banner p {
+      font-size: 13px;
+      color: #1e293b;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .window-body {
+      padding: 24px;
+      background: var(--bg-window);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .account-card-select {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: #0f172a;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .account-card-select:hover {
+      border-color: var(--banner-bg);
+      background: #1e293b;
+      transform: translateY(-1px);
+    }
+
+    .account-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .avatar-render {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .acc-details {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .acc-name { font-weight: 600; font-size: 14px; color: var(--text-main); }
+    .acc-type { font-size: 12px; color: var(--text-muted); }
+
+    .acc-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #334155;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .tag.kid { background: #831843; color: #fbcfe8; }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--danger);
+    }
+
+    .permissions-box {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .permissions-box strong {
+      color: var(--text-main);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .permissions-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .permissions-list li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      color: #cbd5e1;
+    }
+
+    .permissions-list li::before {
+      content: "✓";
+      color: var(--banner-bg);
+      font-weight: bold;
+    }
+
+    .permissions-box.warning-box {
+      border-color: #991b1b;
+      background: #450a0a;
+    }
+
+    .permissions-box.warning-box strong {
+      color: #fca5a5;
+    }
+
+    .permissions-box.warning-box .permissions-list li::before {
+      content: "⚠️";
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      background: #0f172a;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--banner-bg);
+      background: #0f172a;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; margin-top: 8px; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      margin-top: 10px;
+    }
+    .btn-outline:hover { background: #334155; }
+
+    .alert {
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .alert-error { background: #450a0a; color: #fca5a5; border: 1px solid #991b1b; }
+
+    .success-screen {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      background: #064e3b;
+      color: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="david-window">
+    <div class="window-header">
+      <div class="brand">
+        <svg viewBox="0 0 100 100" class="brand-logo-img">
+          <circle cx="50" cy="50" r="50" fill="#ffffff" />
+          <circle cx="50" cy="42" r="19" fill="#0f172a" />
+          <ellipse cx="50" cy="95" rx="38" ry="30" fill="#0f172a" />
+        </svg>
+        <div class="brand-title">Cuenta David</div>
+      </div>
+    </div>
+
+    <div class="sso-banner" id="ssoBanner">
+      <div class="app-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+        </svg>
+        <span id="badgeDomain">misitioweb.com</span>
+      </div>
+      <h2>Iniciar sesión con Cuenta David</h2>
+      <p>Selecciona una cuenta para continuar en <strong id="bannerAppName">MiSitioWeb</strong></p>
+    </div>
+
+    <div class="window-body">
+      <div id="alertBox" class="alert alert-error"></div>
+
+      <!-- VISTA 1: SELECCIÓN DE CUENTA -->
+      <div id="view-select" class="view active">
+        <div class="accounts-list" id="accountsList"></div>
+
+        <div class="permissions-box" id="permBox">
+          <strong id="permissionTitle">Al continuar, MiSitioWeb recopilará:</strong>
+          <ul class="permissions-list" id="permissionsList"></ul>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-outline" onclick="showView('view-login-other')">Iniciar sesión</button>
+          <button class="btn btn-outline" style="border-color: var(--banner-bg); color: var(--banner-bg);" onclick="showView('view-register')">+ Crear cuenta</button>
+        </div>
+        <button class="btn btn-outline" style="border:none; color:var(--text-muted);" onclick="cancelLogin()">Cancelar</button>
+      </div>
+
+      <!-- VISTA 2: INICIAR CON OTRA CUENTA -->
+      <div id="view-login-other" class="view">
+        <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--text-main);">Inicia sesión con otra cuenta</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom: 16px;">Ingresa tus credenciales de Cuenta David</p>
+
+        <form id="form-login-other" onsubmit="handleLoginOther(event)">
+          <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input type="text" id="loginUser" required placeholder="Ej. usuario123">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPass" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary">Entrar</button>
+          <button type="button" class="btn btn-outline" onclick="showView('view-select')">Volver</button>
+        </form>
+      </div>
+
+      <!-- VISTA 3: CREAR CUENTA NUEVA -->
+      <div id="view-register" class="view">
+        <h3 style="margin-bottom: 6px; font-size: 16px; color: var(--text-main);">Crear una Cuenta David</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom: 16px;">Completa los datos para registrar tu nueva cuenta</p>
+
+        <form id="form-register" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input type="text" id="regUser" required placeholder="Ej. DavidGamer">
+          </div>
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="regEmail" required placeholder="correo@ejemplo.com">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="regPass" required placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>Tipo de cuenta</label>
+            <select id="regType" onchange="toggleAgeField()">
+              <option value="normal">Normal</option>
+              <option value="kid">Infantil (Niño/a)</option>
+            </select>
+          </div>
+          <div class="form-group" id="ageGroup" style="display: none;">
+            <label>Edad</label>
+            <input type="number" id="regAge" min="3" max="17" placeholder="Ej. 8">
+          </div>
+          <button type="submit" class="btn btn-primary">Registrar e Iniciar sesión</button>
+          <button type="button" class="btn btn-outline" onclick="showView('view-select')">Volver</button>
+        </form>
+      </div>
+
+      <!-- VISTA 4: ÉXITO -->
+      <div id="view-success" class="view">
+        <div class="success-screen">
+          <div class="success-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 6px; color: var(--text-main);">¡Sesión Iniciada!</h3>
+          <p style="font-size: 13px; color: var(--text-muted);" id="successMessage">Redirigiendo...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Lista oficial de páginas soportadas
+    const KNOWN_WEBSITES = {
+      'codepen.io': { name: 'CodePen', permissions: ['Nombre de usuario', 'Correo electrónico', 'Proyectos guardados'] },
+      'youtube.com': { name: 'YouTube', permissions: ['Nombre del canal', 'Suscripciones públicas', 'Historial de reproducción'] },
+      'google.com': { name: 'Google', permissions: ['Nombre completo', 'Correo electrónico', 'Foto de perfil'] },
+      'github.com': { name: 'GitHub', permissions: ['Nombre de usuario', 'Correo electrónico', 'Repositorios públicos'] },
+      'chatgpt.com': { name: 'ChatGPT', permissions: ['Nombre de usuario', 'Correo electrónico', 'Historial de chats'] },
+      'openai.com': { name: 'ChatGPT', permissions: ['Nombre de usuario', 'Correo electrónico', 'Historial de chats'] },
+      'claude.ai': { name: 'Claude', permissions: ['Nombre de usuario', 'Correo electrónico', 'Conversaciones'] },
+      'roblox.com': { name: 'Roblox', permissions: ['Nombre de usuario y Avatar', 'Rango de edad', 'Lista de amigos'] },
+      'minecraft.net': { name: 'Minecraft', permissions: ['GamerTag / Usuario', 'Skin', 'Licencia del juego'] },
+      'microsoft.com': { name: 'Microsoft', permissions: ['Nombre completo', 'Correo electrónico', 'Dispositivos vinculados'] },
+      'apple.com': { name: 'Apple', permissions: ['Nombre de ID de Apple', 'Correo de contacto', 'Suscripciones'] }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const domainParam = (urlParams.get('domain') || '').toLowerCase().trim();
+    const appParam = urlParams.get('app');
+
+    let targetApp = '';
+    let targetDomain = domainParam || 'sitio-desconocido.com';
+    let targetPermissions = [];
+    let isUnknownWeb = false;
+
+    // Lógica para detectar si la web es conocida o desconocida
+    if (KNOWN_WEBSITES[domainParam]) {
+      targetApp = KNOWN_WEBSITES[domainParam].name;
+      targetPermissions = KNOWN_WEBSITES[domainParam].permissions;
+    } else if (appParam) {
+      targetApp = appParam;
+      targetPermissions = ['Datos básicos del perfil'];
+    } else {
+      isUnknownWeb = true;
+      targetApp = 'Web Desconocido';
+      targetPermissions = [
+        'Precaución: Este sitio no está verificado por Cuenta David',
+        'Podría solicitar credenciales de forma no segura'
+      ];
+    }
+
+    // Actualizar banner e interfaz según el tipo de sitio
+    document.getElementById('badgeDomain').innerText = targetDomain;
+    document.getElementById('bannerAppName').innerText = targetApp;
+
+    if (isUnknownWeb) {
+      document.getElementById('ssoBanner').classList.add('unknown');
+      document.getElementById('permBox').classList.add('warning-box');
+      document.getElementById('permissionTitle').innerText = 'Advertencia de seguridad:';
+    } else {
+      document.getElementById('permissionTitle').innerText = `Al continuar, ${targetApp} recopilará:`;
+    }
+
+    const permissionsContainer = document.getElementById('permissionsList');
+    permissionsContainer.innerHTML = '';
+    targetPermissions.forEach(perm => {
+      const li = document.createElement('li');
+      li.innerText = perm.trim();
+      permissionsContainer.appendChild(li);
+    });
+
+    let rawAccounts = JSON.parse(localStorage.getItem('david_accounts')) || [
+      { username: 'DavidDemo', email: 'david@ejemplo.com', type: 'normal', password: '123' }
+    ];
+
+    let accounts = rawAccounts.map(a => ({
+      ...a,
+      username: a.username || a.name || 'Usuario'
+    }));
+
+    function saveAccountsToStorage() {
+      localStorage.setItem('david_accounts', JSON.stringify(accounts));
+    }
+
+    function showAlert(msg) {
+      const box = document.getElementById('alertBox');
+      box.innerText = msg;
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      document.getElementById('alertBox').style.display = 'none';
+    }
+
+    function toggleAgeField() {
+      const type = document.getElementById('regType').value;
+      document.getElementById('ageGroup').style.display = type === 'kid' ? 'block' : 'none';
+    }
+
+    function renderAvatarHTML(acc) {
+      if (acc && acc.avatar) {
+        return `<img src="${acc.avatar}" class="avatar-render" alt="Foto de perfil">`;
+      }
+      const isKid = acc && acc.type === 'kid';
+      return `
+        <svg viewBox="0 0 100 100" class="avatar-render">
+          <circle cx="50" cy="50" r="50" fill="${isKid ? '#be185d' : '#38bdf8'}" />
+          <circle cx="50" cy="42" r="19" fill="#0f172a" />
+          <ellipse cx="50" cy="95" rx="38" ry="30" fill="#0f172a" />
+        </svg>
+      `;
+    }
+
+    function renderAccountsList() {
+      const listContainer = document.getElementById('accountsList');
+      listContainer.innerHTML = '';
+
+      if (accounts.length === 0) {
+        listContainer.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:15px;">No hay Cuentas David guardadas.</p>`;
+        return;
+      }
+
+      accounts.forEach(acc => {
+        const isKid = acc.type === 'kid';
+        const card = document.createElement('div');
+        card.className = 'account-card-select';
+        card.onclick = () => selectAccount(acc);
+
+        card.innerHTML = `
+          <div class="account-info">
+            ${renderAvatarHTML(acc)}
+            <div class="acc-details">
+              <div class="acc-name">${acc.username}</div>
+              <div class="acc-type">${isKid ? 'Cuenta Infantil (' + (acc.age || '8') + ' años)' : acc.email}</div>
+            </div>
+          </div>
+          <div class="acc-actions">
+            <span class="tag ${isKid ? 'kid' : ''}">${isKid ? 'Niño/a' : 'Normal'}</span>
+            <button class="delete-btn" title="Eliminar cuenta" onclick="deleteAccount('${acc.username}', event)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+
+    function deleteAccount(username, event) {
+      event.stopPropagation();
+      if (confirm(`¿Estás seguro de que deseas eliminar la cuenta de @${username}?`)) {
+        accounts = accounts.filter(a => a.username.toLowerCase() !== username.toLowerCase());
+        saveAccountsToStorage();
+        renderAccountsList();
+      }
+    }
+
+    function selectAccount(account) {
+      localStorage.setItem('david_active_user', account.username);
+      document.getElementById('successMessage').innerText = `Has iniciado sesión como @${account.username}. Redirigiendo a ${targetDomain}...`;
+      showView('view-success');
+    }
+
+    function handleLoginOther(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+
+      const found = accounts.find(a => (a.username || '').toLowerCase() === user.toLowerCase() && a.password === pass);
+
+      if (found) {
+        selectAccount(found);
+      } else {
+        showAlert('Usuario o contraseña incorrectos.');
+      }
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('regUser').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPass').value;
+      const type = document.getElementById('regType').value;
+      const age = document.getElementById('regAge').value;
+
+      const exists = accounts.some(a => a.username.toLowerCase() === username.toLowerCase());
+      if (exists) {
+        showAlert('Ese nombre de usuario ya está registrado.');
+        return;
+      }
+
+      const newAccount = { username, email, password, type, age: type === 'kid' ? (age || 8) : null };
+      
+      accounts.push(newAccount);
+      saveAccountsToStorage();
+      renderAccountsList();
+      selectAccount(newAccount);
+    }
+
+    function cancelLogin() {
+      if (confirm(`¿Deseas cancelar el inicio de sesión en ${targetApp}?`)) {
+        alert('Inicio de sesión cancelado.');
+      }
+    }
+
+    renderAccountsList();
+  </script>
+</body>
+</html>
